@@ -47,7 +47,9 @@ class Robot(object):
         else:
             # TODO 2. Update parameters when learning
             self.t += 1
-            self.epsilon = self.epsilon0 / self.t 
+            self.epsilon = self.epsilon0 - self.t*0.1
+            if self.epsilon < 0.01:
+                self.epsilon = 0.01 
 
         return self.epsilon
 
@@ -68,10 +70,7 @@ class Robot(object):
         # Qtable[state] ={'u':xx, 'd':xx, ...}
         # If Qtable[state] already exits, then do
         # not change it.
-        if state not in self.Qtable.keys():
-            self.Qtable[state] = {}
-            for action in self.valid_actions:
-                self.Qtable[state][action] = 0
+        self.Qtable.setdefault(state, {action:0 for action in self.valid_actions})
 
     def choose_action(self):
         """
@@ -105,9 +104,9 @@ class Robot(object):
         if self.learning:
             # TODO 8. When learning, update the q table according
             # to the given rules
-            max_key = max(self.Qtable[next_state], key=self.Qtable[next_state].get)
-            max_next_q = self.Qtable[next_state][max_key]
-            self.Qtable[self.state][action] = (1 - self.alpha) * self.Qtable[self.state][action] + self.alpha * (r + self.gamma * max_next_q)
+            max_next_q = max(self.Qtable[next_state].values())
+            old_q = self.Qtable[self.state][action]
+            self.Qtable[self.state][action] = old_q + self.alpha * (r + self.gamma * max_next_q - old_q)
 
     def update(self):
         """
